@@ -2,8 +2,12 @@
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 
 // Clockface
-#include <Clockface.h>
-// Commons
+#include <MarioFace.h>
+#include <PacmanFace.h>
+#include <Pockdexface.h>
+#include <CustomizeFace.h>
+
+//  Commons
 #include <WiFiController.h>
 #include <CWDateTime.h>
 #include <CWPreferences.h>
@@ -17,7 +21,10 @@
 
 MatrixPanel_I2S_DMA *dma_display = nullptr;
 
-Clockface *clockface;
+MarioFace *marioFace;
+PacManface *pacManface;
+PockDexFace *pockDexFace;
+CustomizeFace *customizeFace;
 
 WiFiController wifi;
 CWDateTime cwDateTime;
@@ -25,22 +32,35 @@ CWDateTime cwDateTime;
 bool autoBrightEnabled;
 long autoBrightMillis = 0;
 uint8_t currentBrightSlot = -1;
+unsigned long lastMillis = 0;
 
-void displaySetup(bool swapBlueGreen, uint8_t displayBright, uint8_t displayRotation)
+void displaySetup(uint8_t swapRGB, uint8_t displayBright, uint8_t displayRotation, bool clockPhase)
 {
+
   HUB75_I2S_CFG mxconfig(64, 64, 1);
 
-  if (swapBlueGreen)
+  if (swapRGB = 1)
   {
-    // Swap Blue and Green pins because the panel is RBG instead of RGB.
+
+    mxconfig.gpio.r1 = 27;
+    mxconfig.gpio.r2 = 13;
     mxconfig.gpio.b1 = 26;
     mxconfig.gpio.b2 = 12;
-    mxconfig.gpio.g1 = 27;
-    mxconfig.gpio.g2 = 13;
+    mxconfig.gpio.g1 = 25;
+    mxconfig.gpio.g2 = 14;
+  }
+  else if (swapRGB = 2)
+  {
+    mxconfig.gpio.r1 = 27;
+    mxconfig.gpio.r2 = 13;
+    mxconfig.gpio.b1 = 26;
+    mxconfig.gpio.b2 = 12;
+    mxconfig.gpio.g1 = 25;
+    mxconfig.gpio.g2 = 14;
   }
 
   mxconfig.gpio.e = 18;
-  mxconfig.clkphase = false;
+  mxconfig.clkphase = clockPhase;
 
   // Display Setup
   dma_display = new MatrixPanel_I2S_DMA(mxconfig);
@@ -52,7 +72,8 @@ void displaySetup(bool swapBlueGreen, uint8_t displayBright, uint8_t displayRota
 
 void automaticBrightControl()
 {
-  if (autoBrightEnabled) {
+  if (autoBrightEnabled)
+  {
     if (millis() - autoBrightMillis > 3000)
     {
       int16_t currentValue = analogRead(ClockwiseParams::getInstance()->ldrPin);
@@ -63,15 +84,16 @@ void automaticBrightControl()
       const uint8_t minBright = (currentValue < ldrMin ? MIN_BRIGHT_DISPLAY_OFF : MIN_BRIGHT_DISPLAY_ON);
       uint8_t maxBright = ClockwiseParams::getInstance()->displayBright;
 
-      uint8_t slots = 10; //10 slots
+      uint8_t slots = 10; // 10 slots
       uint8_t mapLDR = map(currentValue > ldrMax ? ldrMax : currentValue, ldrMin, ldrMax, 1, slots);
       uint8_t mapBright = map(mapLDR, 1, slots, minBright, maxBright);
 
       // Serial.printf("LDR: %d, mapLDR: %d, Bright: %d\n", currentValue, mapLDR, mapBright);
-      if(abs(currentBrightSlot - mapLDR ) >= 2 || mapBright == 0){
-           dma_display->setBrightness8(mapBright);
-           currentBrightSlot=mapLDR;
-          //  Serial.printf("setBrightness: %d , Update currentBrightSlot to %d\n", mapBright, mapLDR);
+      if (abs(currentBrightSlot - mapLDR) >= 2 || mapBright == 0)
+      {
+        dma_display->setBrightness8(mapBright);
+        currentBrightSlot = mapLDR;
+        //  Serial.printf("setBrightness: %d , Update currentBrightSlot to %d\n", mapBright, mapLDR);
       }
       autoBrightMillis = millis();
     }
@@ -89,8 +111,24 @@ void setup()
 
   pinMode(ClockwiseParams::getInstance()->ldrPin, INPUT);
 
-  displaySetup(ClockwiseParams::getInstance()->swapBlueGreen, ClockwiseParams::getInstance()->displayBright, ClockwiseParams::getInstance()->displayRotation);
-  clockface = new Clockface(dma_display);
+  displaySetup(ClockwiseParams::getInstance()->swapRGB, ClockwiseParams::getInstance()->displayBright,
+               ClockwiseParams::getInstance()->displayRotation, ClockwiseParams::getInstance()->clockPhase);
+  if (ClockwiseParams::getInstance()->themeName.equals("mario"))
+  {
+    marioFace = new MarioFace(dma_display);
+  }
+  else if (ClockwiseParams::getInstance()->themeName.equals("pacman"))
+  {
+    pacManface = new PacManface(dma_display);
+  }
+  else if (ClockwiseParams::getInstance()->themeName.equals("pockdex"))
+  {
+    pockDexFace = new PockDexFace(dma_display);
+  }
+  else
+  {
+    customizeFace = new CustomizeFace(dma_display);
+  }
 
   autoBrightEnabled = (ClockwiseParams::getInstance()->autoBrightMax > 0);
 
@@ -101,11 +139,27 @@ void setup()
   if (wifi.begin())
   {
     StatusController::getInstance()->ntpConnecting();
-    cwDateTime.begin(ClockwiseParams::getInstance()->timeZone.c_str(), 
-        ClockwiseParams::getInstance()->use24hFormat, 
-        ClockwiseParams::getInstance()->ntpServer.c_str(),
-        ClockwiseParams::getInstance()->manualPosix.c_str());
-    clockface->setup(&cwDateTime);
+    cwDateTime.begin(ClockwiseParams::getInstance()->timeZone.c_str(),
+                     ClockwiseParams::getInstance()->use24hFormat,
+                     ClockwiseParams::getInstance()->ntpServer.c_str(),
+                     ClockwiseParams::getInstance()->manualPosix.c_str());
+
+    if (ClockwiseParams::getInstance()->themeName.equals("mario"))
+    {
+      marioFace->setup(&cwDateTime);
+    }
+    else if (ClockwiseParams::getInstance()->themeName.equals("pacman"))
+    {
+      pacManface->setup(&cwDateTime);
+    }
+    else if (ClockwiseParams::getInstance()->themeName.equals("pockdex"))
+    {
+      pockDexFace->setup(&cwDateTime);
+    }
+    else
+    {
+      customizeFace->setup(&cwDateTime);
+    }
   }
 }
 
@@ -121,7 +175,22 @@ void loop()
 
   if (wifi.connectionSucessfulOnce)
   {
-    clockface->update();
+    if (ClockwiseParams::getInstance()->themeName.equals("mario"))
+    {
+      marioFace->update();
+    }
+    else if (ClockwiseParams::getInstance()->themeName.equals("pacman"))
+    {
+      pacManface->update();
+    }
+    else if (ClockwiseParams::getInstance()->themeName.equals("pockdex"))
+    {
+      pockDexFace->update();
+    }
+    else
+    {
+      customizeFace->update();
+    }
   }
 
   automaticBrightControl();
