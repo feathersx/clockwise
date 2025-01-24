@@ -4,6 +4,7 @@
 #include <CWPreferences.h>
 #include "StatusController.h"
 #include "SettingsWebPage.h"
+#include "JsonFileUtils.h"
 
 #ifndef CLOCKFACE_NAME
 #define CLOCKFACE_NAME "UNKNOWN"
@@ -76,20 +77,20 @@ struct ClockwiseWebServer
               value = path.substring(path.indexOf('=') + 1);
               path = path.substring(0, path.indexOf('?'));
             }
+            processRequest(client, method, path, key, value);
+
             if (postString && postString.indexOf("themeJson=") > -1)
             {
-              String themeJson = postString.substring(postString.indexOf("themeJson=") + 10);
-              //Serial.print("postString: " + themeJson);
-              ClockwiseParams::getInstance()->themeJson = themeJson;
+              String jsonFace = postString.substring(postString.indexOf("themeJson=") + 10, postString.lastIndexOf("}") + 1);
+              Serial.print("postThemeJson: " + jsonFace);
+              JsonFileUtils::saveJson("customize", jsonFace.c_str());
             }
-
-            processRequest(client, method, path, key, value);
             httpBuffer = "";
             break;
           }
         }
       }
-      delay(1);
+      delay(5);
       client.stop();
     }
   }
@@ -184,10 +185,10 @@ struct ClockwiseWebServer
       {
         ClockwiseParams::getInstance()->themeName = value;
       }
-      else if (key == ClockwiseParams::getInstance()->THEME_JSON)
-      {
-        ClockwiseParams::getInstance()->themeJson = value;
-      }
+      // else if (key == ClockwiseParams::getInstance()->THEME_JSON)
+      // {
+      //   ClockwiseParams::getInstance()->themeJson = value;
+      // }
       ClockwiseParams::getInstance()->save();
 
       client.println("HTTP/1.0 204 No Content");

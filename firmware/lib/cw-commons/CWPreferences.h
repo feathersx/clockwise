@@ -88,8 +88,8 @@ struct ClockwiseParams
         autoBrightMax = preferences.getUInt(PREF_DISPLAY_ABC_MAX, 0);
         ldrPin = preferences.getUInt(PREF_LDR_PIN, 35);
         timeZone = preferences.getString(PREF_TIME_ZONE, "Asia/Shanghai");
-        wifiSsid = preferences.getString(PREF_WIFI_SSID, "");
-        wifiPwd = preferences.getString(PREF_WIFI_PASSWORD, "");
+        wifiSsid = preferences.getString(PREF_WIFI_SSID, "ASUS");
+        wifiPwd = preferences.getString(PREF_WIFI_PASSWORD, "from0910");
         ntpServer = preferences.getString(PREF_NTP_SERVER, "ntp1.aliyun.com");
         canvasFile = preferences.getString(PREF_CANVAS_FILE, "nyan-cat");
         canvasServer = preferences.getString(PREF_CANVAS_SERVER, "");
