@@ -36,28 +36,43 @@ unsigned long lastMillis = 0;
 
 void displaySetup(uint8_t swapRGB, uint8_t displayBright, uint8_t displayRotation, bool clockPhase)
 {
-
   HUB75_I2S_CFG mxconfig(64, 64, 1);
 
-  if (swapRGB = 1)
-  {
+  // uint8_t* rgb=[27,13,25,14,26,12];
 
-    mxconfig.gpio.r1 = 27;
-    mxconfig.gpio.r2 = 13;
-    mxconfig.gpio.b1 = 26;
-    mxconfig.gpio.b2 = 12;
-    mxconfig.gpio.g1 = 25;
-    mxconfig.gpio.g2 = 14;
-  }
-  else if (swapRGB = 2)
-  {
-    mxconfig.gpio.r1 = 27;
-    mxconfig.gpio.r2 = 13;
-    mxconfig.gpio.b1 = 26;
-    mxconfig.gpio.b2 = 12;
-    mxconfig.gpio.g1 = 25;
-    mxconfig.gpio.g2 = 14;
-  }
+  int rgbArray[6][6] = {
+      {27, 13, 25, 14, 26, 12},
+      {27, 13, 26, 12, 25, 14},
+      {25, 14, 27, 13, 26, 12},
+      {26, 12, 25, 14, 27, 13},
+      {26, 12, 27, 13, 25, 14},
+      {26, 12, 26, 12, 27, 13},
+  };
+  mxconfig.gpio.r1 = rgbArray[swapRGB][0];
+  mxconfig.gpio.r2 = rgbArray[swapRGB][1];
+  mxconfig.gpio.g1 = rgbArray[swapRGB][2];
+  mxconfig.gpio.g2 = rgbArray[swapRGB][3];
+  mxconfig.gpio.b1 = rgbArray[swapRGB][4];
+  mxconfig.gpio.b2 = rgbArray[swapRGB][5];
+
+  // if (swapRGB = 1)
+  // {
+  //   mxconfig.gpio.r1 = 27;
+  //   mxconfig.gpio.r2 = 13;
+  //   mxconfig.gpio.g1 = 25;
+  //   mxconfig.gpio.g2 = 14;
+  //   mxconfig.gpio.b1 = 26;
+  //   mxconfig.gpio.b2 = 12;
+  // }
+  // else if (swapRGB = 2)
+  // {
+  //   mxconfig.gpio.r1 = 27;
+  //   mxconfig.gpio.r2 = 13;
+  //   mxconfig.gpio.g1 = 25;
+  //   mxconfig.gpio.g2 = 14;
+  //   mxconfig.gpio.b1 = 26;
+  //   mxconfig.gpio.b2 = 12;
+  // }
 
   mxconfig.gpio.e = 18;
   mxconfig.clkphase = clockPhase;

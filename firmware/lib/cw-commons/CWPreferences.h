@@ -60,7 +60,7 @@ struct ClockwiseParams
 
     void save()
     {
-        preferences.putBool(PREF_SWAP_BLUE_GREEN, swapRGB);
+        preferences.putUInt(PREF_SWAP_BLUE_GREEN, swapRGB);
         preferences.putBool(PREF_USE_24H_FORMAT, use24hFormat);
         preferences.putUInt(PREF_DISPLAY_BRIGHT, displayBright);
         preferences.putUInt(PREF_DISPLAY_ABC_MIN, autoBrightMin);
@@ -81,7 +81,7 @@ struct ClockwiseParams
 
     void load()
     {
-        swapRGB = preferences.getBool(PREF_SWAP_BLUE_GREEN, false);
+        swapRGB = preferences.getUInt(PREF_SWAP_BLUE_GREEN, 1);
         use24hFormat = preferences.getBool(PREF_USE_24H_FORMAT, true);
         displayBright = preferences.getUInt(PREF_DISPLAY_BRIGHT, 32);
         autoBrightMin = preferences.getUInt(PREF_DISPLAY_ABC_MIN, 0);
@@ -95,7 +95,7 @@ struct ClockwiseParams
         canvasServer = preferences.getString(PREF_CANVAS_SERVER, "");
         manualPosix = preferences.getString(PREF_MANUAL_POSIX, "");
         displayRotation = preferences.getUInt(PREF_DISPLAY_ROTATION, 0);
-        clockPhase = preferences.getUInt(PREF_CLOCK_PHASE, true);
+        clockPhase = preferences.getBool(PREF_CLOCK_PHASE, true);
         themeName = preferences.getString(THEME_NAME, "mario");
         themeJson = preferences.getString(THEME_JSON, "");
     }
